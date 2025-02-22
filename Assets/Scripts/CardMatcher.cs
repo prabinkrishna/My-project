@@ -25,11 +25,13 @@ public class CardMatcher : MonoBehaviour
     }
     [SerializeField]
     private TextAsset textAsset;
-    
+    private List<GameObject> _cards = new List<GameObject>();
     private ImageDataList imageDataList;
     private int _gridColumn = 4;
     private int _gridRow = 3;
-     private List<int> _imageIndexList = new List<int>();
+    private List<int> _imageIndexList = new List<int>();
+
+    private int _currentRevealedCardId = -1;
     void Start()
     {
          if (textAsset != null)
@@ -62,9 +64,43 @@ public class CardMatcher : MonoBehaviour
             card.transform.SetParent(_cardContainer.transform);
             Sprite sprite = Resources.Load<Sprite>("Images/" + imageDataList.images[_imageIndexList[i]].fileName);
             card.GetComponent<Card>().SetResultImage(sprite);
+            card.GetComponent<Card>().Init(this);
+            card.GetComponent<Card>().SetImageId(_imageIndexList[i]);
+            card.GetComponent<Card>().SetCardId(i);
+            _cards.Add(card);
         }
 
     }
+
+    public void OnReveal()
+    {
+        foreach (var card in _cards)
+        {
+            card.GetComponent<Card>().OnReveal();
+        }
+    }
+
+    public void OnCardReveal(int id)
+    {
+        if(_currentRevealedCardId == -1)
+        {
+            _currentRevealedCardId = id;
+        }
+        else
+        {
+            if(_currentRevealedCardId == id)
+            {
+                Debug.Log("Matched");
+            }
+            else
+            {
+                Debug.Log("Not Matched");
+            }
+            _currentRevealedCardId = -1;
+        }
+        Debug.Log("Card Id: " + id);
+    }
+
     private List<T> ShuffleList<T>(List<T> list)
     {
         for (int i = 0; i < list.Count; i++)
@@ -76,6 +112,5 @@ public class CardMatcher : MonoBehaviour
         }
         return list;
     }
-    
     
 }

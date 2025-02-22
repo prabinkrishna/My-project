@@ -8,15 +8,30 @@ public class Card : MonoBehaviour
 {
     [SerializeField] private Button _revealButton;
     [SerializeField] private Image _resultImage;
-    [SerializeField]   private int _id;
-    public int Id => _id;
-    public void SetId(int id)
+    [SerializeField]   private int _imageId;
+    private CardMatcher _game;
+    private int _cardId;
+    public int Id => _imageId;
+    public void Init(CardMatcher game)
     {
-        _id = id;
+        _game = game;
+    }
+    public void SetImageId(int id)
+    {
+        _imageId = id;
+    }
+    public void SetCardId(int id)
+    {
+        _cardId = id;
     }
     public void OnReveal()
     {
         _revealButton.gameObject.SetActive(false);
+        _game.OnCardReveal(_imageId);
+    }
+    public void OnHide()
+    {
+        _revealButton.gameObject.SetActive(true);
     }
     public void SetResultImage(Sprite sprite)
     {
