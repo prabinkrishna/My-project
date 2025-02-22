@@ -1,6 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -26,15 +23,37 @@ public class Card : MonoBehaviour
     }
     public void OnReveal()
     {
+        Debug.Log("Revealed"+_game.revealedCardCounter);
+        _game.revealedCardCounter++;
+        if(_game.revealedCardCounter >2)
+        {
+            return;
+        }
+        Debug.Log("Revealed after "+_game.revealedCardCounter);
         _revealButton.gameObject.SetActive(false);
-        _game.OnCardReveal(_imageId);
+        _game.OnCardReveal(_imageId,_cardId);
     }
-    public void OnHide()
+    public void ToggleInteraction(bool status )
+    {
+        _revealButton.interactable = status;
+    }
+    public void StopInteraction()
+    {
+        _revealButton.interactable = false;
+    }
+
+    public void HideCard()
     {
         _revealButton.gameObject.SetActive(true);
     }
     public void SetResultImage(Sprite sprite)
     {
         _resultImage.sprite = sprite;
+    }
+    public void DestroyCard()
+    {
+       _revealButton.gameObject.SetActive(false);
+       _resultImage.gameObject.SetActive(false);
+
     }
 }

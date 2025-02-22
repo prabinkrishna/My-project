@@ -32,6 +32,9 @@ public class CardMatcher : MonoBehaviour
     private List<int> _imageIndexList = new List<int>();
 
     private int _currentRevealedCardId = -1;
+    private int _currentRevealedCardIndex = -1;
+
+    public int revealedCardCounter =0;
     void Start()
     {
          if (textAsset != null)
@@ -43,6 +46,7 @@ public class CardMatcher : MonoBehaviour
         }
       
         GridLayoutGroup gridLayoutGroup = _cardContainer.GetComponent<GridLayoutGroup>();
+       
         gridLayoutGroup.constraint= GridLayoutGroup.Constraint.FixedRowCount;
         gridLayoutGroup.constraintCount = 3;
         imageDataList.images = ShuffleList(imageDataList.images);
@@ -72,16 +76,16 @@ public class CardMatcher : MonoBehaviour
 
     }
 
-    public void OnReveal()
+  
+    public void OnCardReveal(int id, int cardId)
     {
-        foreach (var card in _cards)
+      
+        Debug.Log(cardId+"Card Id: " + id);
+        
+        if(_currentRevealedCardIndex == -1)
         {
-            card.GetComponent<Card>().OnReveal();
+            _currentRevealedCardIndex = cardId;
         }
-    }
-
-    public void OnCardReveal(int id)
-    {
         if(_currentRevealedCardId == -1)
         {
             _currentRevealedCardId = id;
@@ -91,16 +95,43 @@ public class CardMatcher : MonoBehaviour
             if(_currentRevealedCardId == id)
             {
                 Debug.Log("Matched");
+                // _cards[_currentRevealedCardIndex].GetComponent<Card>().HideCard();
+             //   _cards[cardId].GetComponent<Card>().HideCard();
+                StartCoroutine(DestroyCardsAfterDelay(cardId, 0.5f));
+
             }
             else
             {
+                 StartCoroutine(HideCardsAfterDelay(cardId, 0.5f));
+              //  _cards[_currentRevealedCardIndex].GetComponent<Card>().HideCard();
+                //_cards[cardId].GetComponent<Card>().HideCard();
                 Debug.Log("Not Matched");
             }
-            _currentRevealedCardId = -1;
+           
+     
         }
         Debug.Log("Card Id: " + id);
     }
+    private IEnumerator HideCardsAfterDelay(int cardId, float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        Debug.Log(cardId+"Hide Cards"+_currentRevealedCardIndex);
+        _cards[_currentRevealedCardIndex].GetComponent<Card>().HideCard();
+        _cards[cardId].GetComponent<Card>().HideCard();
+        _currentRevealedCardId = -1;
+        _currentRevealedCardIndex = -1;
+        revealedCardCounter =0;
+    }
+     private IEnumerator DestroyCardsAfterDelay(int cardId, float delay)
+    {
+        yield return new WaitForSeconds(delay);
 
+        _cards[_currentRevealedCardIndex].GetComponent<Card>().DestroyCard();
+        _cards[cardId].GetComponent<Card>().DestroyCard();
+        _currentRevealedCardId = -1;
+        _currentRevealedCardIndex = -1;
+        revealedCardCounter =0;
+    }
     private List<T> ShuffleList<T>(List<T> list)
     {
         for (int i = 0; i < list.Count; i++)
