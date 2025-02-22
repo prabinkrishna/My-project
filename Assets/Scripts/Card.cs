@@ -30,6 +30,8 @@ public class Card : MonoBehaviour
             return;
         }
         Debug.Log("Revealed after "+_game.revealedCardCounter);
+        
+
         _revealButton.gameObject.SetActive(false);
         _game.OnCardReveal(_imageId,_cardId);
     }
