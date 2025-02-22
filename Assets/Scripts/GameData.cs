@@ -8,7 +8,7 @@ public class GameData
 {
     // Start is called before the first frame update
     
-    public void SaveData(int[] _gameData , List<int> imageDataList)
+    public void SaveData(int[] _gameData , List<int> imageDataList,List<int> imageIndexList)
     {
         PlayerPrefs.SetString("totalMove", _gameData[0].ToString());
         PlayerPrefs.SetString("matchCounter", _gameData[1].ToString());
@@ -19,12 +19,15 @@ public class GameData
         PlayerPrefs.SetString("gridRow", _gameData[6].ToString());
         List<string> stringList = imageDataList.Select(x => x.ToString()).ToList();
         PlayerPrefs.SetString("imageDataList", String.Join(",", stringList));
+        List<string> stringIndexList = imageIndexList.Select(x => x.ToString()).ToList();
+        PlayerPrefs.SetString("imageIndexList", String.Join(",", stringIndexList));
         Debug.Log(  String.Join(",", imageDataList)+ "Saved Data");
+
         PlayerPrefs.Save();
     }
     public string[] LoadData()
     {
-        string[] _gameData = new string[8];
+        string[] _gameData = new string[9];
         _gameData[0] = PlayerPrefs.GetString("totalMove");
         _gameData[1] = PlayerPrefs.GetString("matchCounter");
         _gameData[2] = PlayerPrefs.GetString("currentRevealedCardId");
@@ -33,6 +36,8 @@ public class GameData
         _gameData[5] = PlayerPrefs.GetString("gridColumn");
         _gameData[6] = PlayerPrefs.GetString("gridRow");
         _gameData[7] = PlayerPrefs.GetString("imageDataList");
+        _gameData[8] = PlayerPrefs.GetString("imageIndexList");
+
 
         return _gameData;
     }

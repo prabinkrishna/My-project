@@ -57,14 +57,17 @@ public class CardMatcher : MonoBehaviour
         GridLayoutGroup gridLayoutGroup = _cardContainer.GetComponent<GridLayoutGroup>();
         gridLayoutGroup.constraint= GridLayoutGroup.Constraint.FixedRowCount;
         gridLayoutGroup.constraintCount = 3;
-        imageDataList.images = ShuffleList(imageDataList.images);
+       // imageDataList.images = ShuffleList(imageDataList.images);
         int totalCards = _gridColumn * _gridRow;
-        for (int i = 0; i < totalCards/2; i++)
+        if(_imageIndexList.Count == 0)
         {
-            _imageIndexList.Add(i);
-            _imageIndexList.Add(i);
+            for (int i = 0; i < totalCards/2; i++)
+            {
+                _imageIndexList.Add(i);
+                _imageIndexList.Add(i);
+            }
+            ShuffleList(_imageIndexList);
         }
-        ShuffleList(_imageIndexList);
         for (int i = 0; i <totalCards; i++)
         {
             GameObject card = Instantiate(_cardPrefab, _cardContainer.transform);
@@ -101,9 +104,16 @@ public class CardMatcher : MonoBehaviour
         revealedCardCounter =data[4] == ""?0:int.Parse(data[4]);
         _gridColumn =data[5] == ""?4:int.Parse(data[5]);
         _gridRow =data[6] == ""?3:int.Parse(data[6]);
-        
         string str = data[7];
         string[] strArray = str.Split(new char[] { ',' });
+        _revealedCardArray = ConvertToIntList(strArray);
+        str= data[8];
+        strArray = str.Split(new char[] { ',' });
+        _imageIndexList = ConvertToIntList(strArray);
+        
+    }
+    private List<int> ConvertToIntList(string[] strArray)
+    {
         List<int> intList = new List<int>();
         foreach (string s in strArray)
         {
@@ -116,8 +126,7 @@ public class CardMatcher : MonoBehaviour
                 Debug.Log("Failed to parse: " + s);
             }
         }
-        _revealedCardArray = intList;
-        
+        return intList;
     }
   
     public void OnCardReveal(int id, int cardId)
@@ -188,7 +197,7 @@ public class CardMatcher : MonoBehaviour
     }
     private void SaveData()
     {
-        _gameData.SaveData(new int[]{_totalMove,_matchCounter,_currentRevealedCardId,_currentRevealedCardIndex,revealedCardCounter,_gridColumn,_gridRow},_revealedCardArray);
+        _gameData.SaveData(new int[]{_totalMove,_matchCounter,_currentRevealedCardId,_currentRevealedCardIndex,revealedCardCounter,_gridColumn,_gridRow},_revealedCardArray,_imageIndexList);
     }
 
     void Update()
@@ -212,7 +221,7 @@ public class CardMatcher : MonoBehaviour
     }
      void OnApplicationQuit()
     {
-         SaveData();
+          SaveData();
     }
 
     void OnDestroy()
