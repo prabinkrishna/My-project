@@ -6,7 +6,7 @@ using UnityEngine;
 
 public class GameData 
 {
-    // Start is called before the first frame update
+ 
     
     public void SaveData(int[] _gameData , List<int> imageDataList,List<int> imageIndexList)
     {

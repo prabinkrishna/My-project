@@ -200,14 +200,14 @@ public class CardMatcher : MonoBehaviour
         _gameData.SaveData(new int[]{_totalMove,_matchCounter,_currentRevealedCardId,_currentRevealedCardIndex,revealedCardCounter,_gridColumn,_gridRow},_revealedCardArray,_imageIndexList);
     }
 
-    void Update()
-    {
-        if (Input.GetKeyDown(KeyCode.C))
-        {
-            PlayerPrefs.DeleteAll();
-            Debug.Log("All PlayerPrefs have been cleared.");
-        }
-    }
+    // void Update()
+    // {
+    //     if (Input.GetKeyDown(KeyCode.C))
+    //     {
+    //         PlayerPrefs.DeleteAll();
+    //         Debug.Log("All PlayerPrefs have been cleared.");
+    //     }
+    // }
     private List<T> ShuffleList<T>(List<T> list)
     {
         for (int i = 0; i < list.Count; i++)
