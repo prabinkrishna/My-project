@@ -6,12 +6,20 @@ using UnityEngine.UI;
 
 public class Card : MonoBehaviour
 {
-    // Start is called before the first frame update
     [SerializeField] private Button _revealButton;
     [SerializeField] private Image _resultImage;
-    
+    [SerializeField]   private int _id;
+    public int Id => _id;
+    public void SetId(int id)
+    {
+        _id = id;
+    }
     public void OnReveal()
     {
         _revealButton.gameObject.SetActive(false);
+    }
+    public void SetResultImage(Sprite sprite)
+    {
+        _resultImage.sprite = sprite;
     }
 }
