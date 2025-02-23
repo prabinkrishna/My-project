@@ -10,6 +10,9 @@ public class CardMatcher : MonoBehaviour
 
     [SerializeField] private GameObject _cardContainer;
 
+    [SerializeField] private GameObject _mainMenu;
+    [SerializeField] private GameObject _game;
+
     [System.Serializable]
     private class ImageData
     {
@@ -35,19 +38,26 @@ public class CardMatcher : MonoBehaviour
     private List<GameObject> _cards = new List<GameObject>();
     private ImageDataList imageDataList;
     private int _gridColumn = 4;
-    private int _gridRow = 3;
+    private int _gridRow = 2;
     private List<int> _imageIndexList = new List<int>();
     private int _currentRevealedCardId = -1;
     private int _currentRevealedCardIndex = -1;
     public int revealedCardCounter =0;
     private List<int> _revealedCardArray;
     private GameData _gameData;
+    private MainMenu _mainMenuScript;
+    private static readonly Dictionary<int,float> SCALE_FACTOR = new Dictionary<int,float>{{2,0.5f}, { 3,0.35f},{ 4,0.25f}};
     void Start()
     {
         _gameData = new GameData();
         InitializeData();
+        InitializeGame();
+    }
+
+    private void InitializeGame()
+    {
         SetScore();
-         if (textAsset != null)
+        if (textAsset != null)
         {
             string jsonContent = textAsset.text;
             imageDataList = JsonUtility.FromJson<ImageDataList>(jsonContent);
@@ -55,8 +65,13 @@ public class CardMatcher : MonoBehaviour
           
         }
         GridLayoutGroup gridLayoutGroup = _cardContainer.GetComponent<GridLayoutGroup>();
-        gridLayoutGroup.constraint= GridLayoutGroup.Constraint.FixedRowCount;
-        gridLayoutGroup.constraintCount = 3;
+        gridLayoutGroup.constraint= GridLayoutGroup.Constraint.Flexible;
+       // gridLayoutGroup.constraintCount = _gridRow;
+
+        float cellWidth = _cardContainer.GetComponent<RectTransform>().rect.width / _gridColumn;
+        float cellHeight = _cardContainer.GetComponent<RectTransform>().rect.height / _gridRow;
+        gridLayoutGroup.cellSize = new Vector2(cellWidth, cellHeight+30);
+    
        // imageDataList.images = ShuffleList(imageDataList.images);
         int totalCards = _gridColumn * _gridRow;
         if(_imageIndexList.Count == 0)
@@ -71,7 +86,7 @@ public class CardMatcher : MonoBehaviour
         for (int i = 0; i <totalCards; i++)
         {
             GameObject card = Instantiate(_cardPrefab, _cardContainer.transform);
-            card.transform.localScale = Vector3.one;
+            card.transform.localScale = Vector3.one * SCALE_FACTOR[_gridRow];
             card.transform.SetParent(_cardContainer.transform);
             Sprite sprite = Resources.Load<Sprite>("Images/" + imageDataList.images[_imageIndexList[i]].fileName);
             card.GetComponent<Card>().SetResultImage(sprite);
@@ -80,7 +95,10 @@ public class CardMatcher : MonoBehaviour
             card.GetComponent<Card>().SetCardId(i);
             _cards.Add(card);
         }
-        InitiliazeCards();
+        if(_revealedCardArray != null)
+        {
+            InitiliazeCards();
+        }
     }
     public void InitiliazeCards()
     {
@@ -90,6 +108,10 @@ public class CardMatcher : MonoBehaviour
             {
                  _cards[i].GetComponent<Card>().DestroyCard();
             }
+        }
+        if(_currentRevealedCardIndex != -1)
+        {
+            _cards[_currentRevealedCardIndex].GetComponent<Card>().OnReveal();
         }
     }
     public void InitializeData()
@@ -189,6 +211,11 @@ public class CardMatcher : MonoBehaviour
         SetScore();
         revealedCardCounter =0;
         SaveData();
+        if(_matchCounter == _gridColumn*_gridRow/2)
+        {
+            Debug.Log("Game Over");
+            ResetGame();
+        }
     }
     private void SetScore()
     {
@@ -197,17 +224,17 @@ public class CardMatcher : MonoBehaviour
     }
     private void SaveData()
     {
-        _gameData.SaveData(new int[]{_totalMove,_matchCounter,_currentRevealedCardId,_currentRevealedCardIndex,revealedCardCounter,_gridColumn,_gridRow},_revealedCardArray,_imageIndexList);
+   //     _gameData.SaveData(new int[]{_totalMove,_matchCounter,_currentRevealedCardId,_currentRevealedCardIndex,revealedCardCounter,_gridColumn,_gridRow},_revealedCardArray,_imageIndexList);
     }
 
-    // void Update()
-    // {
-    //     if (Input.GetKeyDown(KeyCode.C))
-    //     {
-    //         PlayerPrefs.DeleteAll();
-    //         Debug.Log("All PlayerPrefs have been cleared.");
-    //     }
-    // }
+    void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.C))
+        {
+            PlayerPrefs.DeleteAll();
+            Debug.Log("All PlayerPrefs have been cleared.");
+        }
+    }
     private List<T> ShuffleList<T>(List<T> list)
     {
         for (int i = 0; i < list.Count; i++)
@@ -219,7 +246,28 @@ public class CardMatcher : MonoBehaviour
         }
         return list;
     }
-     void OnApplicationQuit()
+    private void ResetGame()
+    {
+        _totalMove = 0;
+        _matchCounter = 0;
+        _currentRevealedCardId = -1;
+        _currentRevealedCardIndex = -1;
+        revealedCardCounter = 0;
+        _revealedCardArray = new List<int>();
+        _imageIndexList = new List<int>();
+        SaveData();
+        ClearGrid();
+        InitializeGame();
+    }
+    public void ClearGrid()
+{
+    foreach (GameObject child in _cards)
+    {
+        Destroy(child);
+    }
+    _cards.Clear();
+}
+    void OnApplicationQuit()
     {
           SaveData();
     }
