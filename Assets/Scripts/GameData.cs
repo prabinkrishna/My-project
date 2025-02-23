@@ -18,6 +18,7 @@ public class GameData
         PlayerPrefs.SetString("gridColumn", _gameData[5].ToString());
         PlayerPrefs.SetString("gridRow", _gameData[6].ToString());
         PlayerPrefs.SetString("score", _gameData[7].ToString());
+        PlayerPrefs.SetString("lives", _gameData[8].ToString());
         List<string> stringList = imageDataList.Select(x => x.ToString()).ToList();
         PlayerPrefs.SetString("imageDataList", String.Join(",", stringList));
         List<string> stringIndexList = imageIndexList.Select(x => x.ToString()).ToList();
@@ -29,7 +30,7 @@ public class GameData
     }
     public string[] LoadData()
     {
-        string[] _gameData = new string[10];
+        string[] _gameData = new string[11];
         _gameData[0] = PlayerPrefs.GetString("totalMove");
         _gameData[1] = PlayerPrefs.GetString("matchCounter");
         _gameData[2] = PlayerPrefs.GetString("currentRevealedCardId");
@@ -40,6 +41,7 @@ public class GameData
         _gameData[7] = PlayerPrefs.GetString("imageDataList");
         _gameData[8] = PlayerPrefs.GetString("imageIndexList");
         _gameData[9] = PlayerPrefs.GetString("score");
+        _gameData[10] = PlayerPrefs.GetString("lives");
 
 
         return _gameData;

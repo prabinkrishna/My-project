@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -7,12 +8,14 @@ public class Card : MonoBehaviour
     [SerializeField] private Image _resultImage;
     [SerializeField] private int _imageId;
     [SerializeField] private AudioSource _audio;
+   // [SerializeField] private Animator _animator;
     private CardMatcher _game;
     private int _cardId;
     public int Id => _imageId;
     public void Init(CardMatcher game)
     {
         _game = game;
+       
     }
     public void SetImageId(int id)
     {
@@ -22,20 +25,19 @@ public class Card : MonoBehaviour
     {
         _cardId = id;
     }
+
+   
+    public void FlipSound()
+    {
+        _audio.Play();
+    }
+   
     public void OnReveal()
     {
-        Debug.Log("Revealed"+_game.revealedCardCounter);
-        _game.revealedCardCounter++;
-        // if(_game.revealedCardCounter >2)
-        // {
-        //     return;
-        // }
-        Debug.Log("Revealed after "+_game.revealedCardCounter);
-        
-      
-        _audio.Play();
         _revealButton.gameObject.SetActive(false);
+        FlipSound();
         _game.OnCardReveal(_cardId);
+        
     }
     public void ToggleInteraction(bool status )
     {
@@ -48,6 +50,7 @@ public class Card : MonoBehaviour
 
     public void ToggleHideCard(bool status)
     {
+       
         _revealButton.gameObject.SetActive(status);
     }
     public void SetResultImage(Sprite sprite)

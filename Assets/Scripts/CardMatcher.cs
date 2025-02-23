@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SocialPlatforms.Impl;
 using UnityEngine.UI;
 
 public class CardMatcher : MonoBehaviour
@@ -23,6 +24,7 @@ public class CardMatcher : MonoBehaviour
     [SerializeField] private TextMeshProUGUI _scoreText;
     [SerializeField] private TextMeshProUGUI _streakText;
     [SerializeField] private TextMeshProUGUI _livesRemainingText;
+    [SerializeField] private TextMeshProUGUI _gameOverText;    
     [SerializeField] private AudioClip[] _audioClips;
     [SerializeField] private AudioSource _audioSource;
     [Serializable]
@@ -53,17 +55,22 @@ public class CardMatcher : MonoBehaviour
     private GameData _gameData;
     private static readonly Dictionary<int,float> SCALE_FACTOR = new Dictionary<int,float>{{2,0.5f}, { 3,0.35f},{ 4,0.25f}};
     public int revealedCardCounter =0;
+    private bool _isResume = false;
     void Start()
     {   
+        _gameOverText.gameObject.SetActive(false);
         _gameData = new GameData();
+        InitializeData();
         if(_totalMove == 0)
         {
+            _isResume= false;
             _mainMenu.GetComponent<MainMenu>().Init(this);
             _mainMenu.SetActive(true);
             _game.SetActive(false);
         }
         else
         {
+             _isResume= true;
             StartGame();
         }
         // StartGame();
@@ -72,30 +79,35 @@ public class CardMatcher : MonoBehaviour
 
     public void StartGame(string level="L1")
     {
-        switch(level)
+
+        if(!_isResume)
         {
-            case "L1":
-                _gridColumn =3;
-                _gridRow = 2;
-                _livesRemaining = 8;
-                break;
-            case "L2":
-                _gridColumn = 4;
-                _gridRow = 3;
-                _livesRemaining = 6;
-                break;
-            case "L3":
-                _gridColumn = 4;
-                _gridRow = 4;
-                _livesRemaining = 4;
-                break;
+
+            switch(level)
+            {
+                case "L1":
+                    _gridColumn =3;
+                    _gridRow = 2;
+                    _livesRemaining = 8;
+                    break;
+                case "L2":
+                    _gridColumn = 4;
+                    _gridRow = 3;
+                    _livesRemaining = 6;
+                    break;
+                case "L3":
+                    _gridColumn = 4;
+                    _gridRow = 4;
+                    _livesRemaining = 4;
+                    break;
+            }
         }
 
 
       _mainMenu.SetActive(false);
       _game.SetActive(true);
     //    _game.SetActive(true);
-        InitializeData();
+       
         InitializeGame();
     }
 
@@ -200,6 +212,7 @@ public class CardMatcher : MonoBehaviour
         str= data[8];
         strArray = str.Split(new char[] { ',' });
         _score = data[9] == ""?0:int.Parse(data[9]);
+        _livesRemaining = data[10] == ""?0:int.Parse(data[10]);
         _imageIndexList = ConvertToIntList(strArray);
         
     }
@@ -235,7 +248,7 @@ public class CardMatcher : MonoBehaviour
                 _streakText.gameObject.SetActive(true);
                 _streak++;
                 _streakText.text = _streak+"xStreak ";
-                _score += 1+_streak;
+                _score++;
 
             }
             else
@@ -243,6 +256,7 @@ public class CardMatcher : MonoBehaviour
               
                 StartCoroutine(HideCardsAfterDelay(cardId1,cardId2, 0.5f));
                 _streakText.gameObject.SetActive(false);
+                _score+=_streak;
                 _streak = 0;
                 _livesRemaining--;
                 _livesRemainingText.text = _livesRemaining+"";
@@ -287,11 +301,18 @@ public class CardMatcher : MonoBehaviour
         SaveData();
         if(_livesRemaining == 0)
         {
+            _score =0;
+            _livesRemaining = 0;
+            _streak = 0;
             Debug.Log("Game Over");
             ClearGrid();
+            _gameOverText.gameObject.SetActive(true);
+            _gameWindow.SetActive(false);
             _audioSource.clip = _audioClips[0];
             _audioSource.Play();
-            yield return new WaitForSeconds(1f);
+            ResetData();
+            yield return new WaitForSeconds(2f);
+             _gameOverText.gameObject.SetActive(false);
             _game.SetActive(false);
             _mainMenu.SetActive(true);
 
@@ -300,7 +321,7 @@ public class CardMatcher : MonoBehaviour
 
         if(_matchCounter == _gridColumn*_gridRow/2)
         {
-            Debug.Log("Game Over");
+            Debug.Log("New Game");
             ClearGrid();
             _gameWindow.SetActive(false);
             _nextButton.SetActive(true);
@@ -316,7 +337,7 @@ public class CardMatcher : MonoBehaviour
     }
     private void SaveData()
     {
-        _gameData.SaveData(new int[]{_totalMove,_matchCounter,_currentRevealedCardId,_currentRevealedCardIndex,revealedCardCounter,_gridColumn,_gridRow,_score},_revealedCardArray,_imageIndexList);
+        // _gameData.SaveData(new int[]{_totalMove,_matchCounter,_currentRevealedCardId,_currentRevealedCardIndex,revealedCardCounter,_gridColumn,_gridRow,_score,_livesRemaining},_revealedCardArray,_imageIndexList);
     }
 
     void Update()
@@ -338,9 +359,9 @@ public class CardMatcher : MonoBehaviour
         }
         return list;
     }
-    
-    private void ResetGame()
+    private void ResetData()
     {
+        
         _totalMove = 0;
         _matchCounter = 0;
         _currentRevealedCardId = -1;
@@ -349,6 +370,10 @@ public class CardMatcher : MonoBehaviour
         _revealedCardArray = new List<int>();
         _imageIndexList = new List<int>();
         SaveData();
+    }
+    private void ResetGame()
+    {
+       ResetData();
       //  ClearGrid();
         InitializeGame();
     }
@@ -365,9 +390,11 @@ public class CardMatcher : MonoBehaviour
 
        
     }
+
+    
     public void OnNextClick()
     {
-        ResetGame();;
+        ResetGame();
     }
     public void ClearGrid()
     {
