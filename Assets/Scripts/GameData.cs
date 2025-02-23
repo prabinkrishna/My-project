@@ -17,17 +17,19 @@ public class GameData
         PlayerPrefs.SetString("revealedCardCounter", _gameData[4].ToString());
         PlayerPrefs.SetString("gridColumn", _gameData[5].ToString());
         PlayerPrefs.SetString("gridRow", _gameData[6].ToString());
+        PlayerPrefs.SetString("score", _gameData[7].ToString());
         List<string> stringList = imageDataList.Select(x => x.ToString()).ToList();
         PlayerPrefs.SetString("imageDataList", String.Join(",", stringList));
         List<string> stringIndexList = imageIndexList.Select(x => x.ToString()).ToList();
         PlayerPrefs.SetString("imageIndexList", String.Join(",", stringIndexList));
         Debug.Log(  String.Join(",", imageDataList)+ "Saved Data");
 
+
         PlayerPrefs.Save();
     }
     public string[] LoadData()
     {
-        string[] _gameData = new string[9];
+        string[] _gameData = new string[10];
         _gameData[0] = PlayerPrefs.GetString("totalMove");
         _gameData[1] = PlayerPrefs.GetString("matchCounter");
         _gameData[2] = PlayerPrefs.GetString("currentRevealedCardId");
@@ -37,6 +39,7 @@ public class GameData
         _gameData[6] = PlayerPrefs.GetString("gridRow");
         _gameData[7] = PlayerPrefs.GetString("imageDataList");
         _gameData[8] = PlayerPrefs.GetString("imageIndexList");
+        _gameData[9] = PlayerPrefs.GetString("score");
 
 
         return _gameData;

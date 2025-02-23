@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
@@ -12,50 +13,96 @@ public class CardMatcher : MonoBehaviour
 
     [SerializeField] private GameObject _mainMenu;
     [SerializeField] private GameObject _game;
+    [SerializeField] private GameObject _nextButton;
+    [SerializeField] private GameObject _gameWindow;
+    
+    [SerializeField] private TextAsset textAsset;
 
-    [System.Serializable]
+    [SerializeField] private TextMeshProUGUI _moveText;
+    [SerializeField] private TextMeshProUGUI _matchText;
+    [SerializeField] private TextMeshProUGUI _scoreText;
+    [SerializeField] private TextMeshProUGUI _streakText;
+    [SerializeField] private TextMeshProUGUI _livesRemainingText;
+    [SerializeField] private AudioClip[] _audioClips;
+    [SerializeField] private AudioSource _audioSource;
+    [Serializable]
     private class ImageData
     {
         public string id;
         public string fileName;
     }
-
-    [System.Serializable]
+    [Serializable]
     private class ImageDataList
     {
         public List<ImageData> images;
     }
-
-    [SerializeField]
-    private TextAsset textAsset;
-
-    [SerializeField] private TextMeshProUGUI _moveText;
-
-    [SerializeField] private TextMeshProUGUI _matchText;
-
+    private int _livesRemaining ;
     private int _matchCounter =0;
+    private int _streak =0;
     private int _totalMove =0;
+    private int _score = 0;
     private List<GameObject> _cards = new List<GameObject>();
+    private List<int> _clickCardList = new List<int>();
     private ImageDataList imageDataList;
     private int _gridColumn = 4;
     private int _gridRow = 2;
     private List<int> _imageIndexList = new List<int>();
     private int _currentRevealedCardId = -1;
     private int _currentRevealedCardIndex = -1;
-    public int revealedCardCounter =0;
     private List<int> _revealedCardArray;
     private GameData _gameData;
-    private MainMenu _mainMenuScript;
     private static readonly Dictionary<int,float> SCALE_FACTOR = new Dictionary<int,float>{{2,0.5f}, { 3,0.35f},{ 4,0.25f}};
+    public int revealedCardCounter =0;
     void Start()
-    {
+    {   
         _gameData = new GameData();
+        if(_totalMove == 0)
+        {
+            _mainMenu.GetComponent<MainMenu>().Init(this);
+            _mainMenu.SetActive(true);
+            _game.SetActive(false);
+        }
+        else
+        {
+            StartGame();
+        }
+        // StartGame();
+      
+    }
+
+    public void StartGame(string level="L1")
+    {
+        switch(level)
+        {
+            case "L1":
+                _gridColumn =3;
+                _gridRow = 2;
+                _livesRemaining = 8;
+                break;
+            case "L2":
+                _gridColumn = 4;
+                _gridRow = 3;
+                _livesRemaining = 6;
+                break;
+            case "L3":
+                _gridColumn = 4;
+                _gridRow = 4;
+                _livesRemaining = 4;
+                break;
+        }
+
+
+      _mainMenu.SetActive(false);
+      _game.SetActive(true);
+    //    _game.SetActive(true);
         InitializeData();
         InitializeGame();
     }
 
     private void InitializeGame()
     {
+        _nextButton.SetActive(false);
+        _gameWindow.SetActive(true);
         SetScore();
         if (textAsset != null)
         {
@@ -99,8 +146,9 @@ public class CardMatcher : MonoBehaviour
         {
             InitiliazeCards();
         }
+        StartCoroutine(RevealCards(0.5f));
     }
-    public void InitiliazeCards()
+    private void InitiliazeCards()
     {
         for (int i = 0; i < _cards.Count; i++)
         {
@@ -114,8 +162,28 @@ public class CardMatcher : MonoBehaviour
             _cards[_currentRevealedCardIndex].GetComponent<Card>().OnReveal();
         }
     }
-    public void InitializeData()
+    private IEnumerator RevealCards(float delay)
     {
+        yield return new WaitForSeconds(delay);
+        for (int i = 0; i < _cards.Count; i++)
+        {
+            _cards[i].GetComponent<Card>().ToggleHideCard(false);
+        }
+        StartCoroutine(HideCards(1f));
+    }
+
+    private IEnumerator HideCards(float delay)
+    {  
+        yield return new WaitForSeconds(delay);
+        for (int i = 0; i < _cards.Count; i++)
+        {
+            _cards[i].GetComponent<Card>().ToggleHideCard(true);
+        }
+    }
+
+    private void InitializeData()
+    {
+        _streak = 0;
         string[] data = _gameData.LoadData();
         
 
@@ -124,13 +192,14 @@ public class CardMatcher : MonoBehaviour
         _currentRevealedCardId =data[2] == ""?-1:int.Parse(data[2]);
         _currentRevealedCardIndex =data[3] == ""?-1:int.Parse(data[3]);
         revealedCardCounter =data[4] == ""?0:int.Parse(data[4]);
-        _gridColumn =data[5] == ""?4:int.Parse(data[5]);
-        _gridRow =data[6] == ""?3:int.Parse(data[6]);
+        _gridColumn =data[5] == ""?_gridColumn:int.Parse(data[5]);
+        _gridRow =data[6] == ""?_gridRow:int.Parse(data[6]);
         string str = data[7];
         string[] strArray = str.Split(new char[] { ',' });
         _revealedCardArray = ConvertToIntList(strArray);
         str= data[8];
         strArray = str.Split(new char[] { ',' });
+        _score = data[9] == ""?0:int.Parse(data[9]);
         _imageIndexList = ConvertToIntList(strArray);
         
     }
@@ -145,86 +214,109 @@ public class CardMatcher : MonoBehaviour
             }
             else
             {
-                Debug.Log("Failed to parse: " + s);
+            //    Debug.Log("Failed to parse: " + s);
             }
         }
         return intList;
     }
   
-    public void OnCardReveal(int id, int cardId)
+   
+    private void CheckCards(int cardId1,int cardId2)
     {
-      
-        Debug.Log(cardId+"Card Id: " + id);
-        
-        if(_currentRevealedCardIndex == -1)
-        {
-            _currentRevealedCardIndex = cardId;
-        }
-        if(_currentRevealedCardId == -1)
-        {
-            _currentRevealedCardId = id;
-        }
-        else
-        {
+
+     
             _totalMove++;
-            if(_currentRevealedCardId == id)
+            if(_imageIndexList[cardId1]== _imageIndexList[cardId2])
             {
                 Debug.Log("Matched");
-                StartCoroutine(DestroyCardsAfterDelay(cardId, 0.5f));
+              
+                StartCoroutine(DestroyCardsAfterDelay(cardId1,cardId2, 0.5f));
                 _matchCounter++;
+                _streakText.gameObject.SetActive(true);
+                _streak++;
+                _streakText.text = _streak+"xStreak ";
+                _score += 1+_streak;
 
             }
             else
             {
-                StartCoroutine(HideCardsAfterDelay(cardId, 0.5f));
+              
+                StartCoroutine(HideCardsAfterDelay(cardId1,cardId2, 0.5f));
+                _streakText.gameObject.SetActive(false);
+                _streak = 0;
+                _livesRemaining--;
+                _livesRemainingText.text = _livesRemaining+"";
                 Debug.Log("Not Matched");
             }
            
      
-        }
-        Debug.Log("Card Id: " + id + "total move: "+_totalMove+"Matched: "+_matchCounter);
+        
+        Debug.Log( "total move: "+_totalMove+"Matched: "+_matchCounter);
+
     }
-    private IEnumerator HideCardsAfterDelay(int cardId, float delay)
+    private IEnumerator HideCardsAfterDelay(int cardId1,int cardId2, float delay)
     {
         yield return new WaitForSeconds(delay);
-        Debug.Log(cardId+"Hide Cards"+_currentRevealedCardIndex);
-        _cards[_currentRevealedCardIndex].GetComponent<Card>().HideCard();
-        _cards[cardId].GetComponent<Card>().HideCard();
-        SelectionComplete();
+        _audioSource.clip = _audioClips[2];
+        _audioSource.Play();
+        Debug.Log(cardId1+"Hide Cards"+cardId2);
+        _cards[cardId1].GetComponent<Card>().ToggleHideCard(true);
+        _cards[cardId2].GetComponent<Card>().ToggleHideCard(true);
+        StartCoroutine(SelectionComplete());
     }
-     private IEnumerator DestroyCardsAfterDelay(int cardId, float delay)
+     private IEnumerator DestroyCardsAfterDelay(int cardId1,int cardId2, float delay)
     {
         yield return new WaitForSeconds(delay);
-
-        _revealedCardArray.Add(_currentRevealedCardIndex);
-        _revealedCardArray.Add(cardId);
-        _cards[_currentRevealedCardIndex].GetComponent<Card>().DestroyCard();
-        _cards[cardId].GetComponent<Card>().DestroyCard();
-        SelectionComplete();
+        _audioSource.clip = _audioClips[1];
+        _audioSource.Play();
+        _revealedCardArray.Add(cardId1);
+        _revealedCardArray.Add(cardId2);
+        _cards[cardId1].GetComponent<Card>().DestroyCard();
+        _cards[cardId2].GetComponent<Card>().DestroyCard();
+        StartCoroutine(SelectionComplete());
+      
     }
 
 
-    private void SelectionComplete()
+    private IEnumerator SelectionComplete()
     {
         _currentRevealedCardId = -1;
         _currentRevealedCardIndex = -1;
         SetScore();
         revealedCardCounter =0;
         SaveData();
+        if(_livesRemaining == 0)
+        {
+            Debug.Log("Game Over");
+            ClearGrid();
+            _audioSource.clip = _audioClips[0];
+            _audioSource.Play();
+            yield return new WaitForSeconds(1f);
+            _game.SetActive(false);
+            _mainMenu.SetActive(true);
+
+           // ResetGame();
+        }
+
         if(_matchCounter == _gridColumn*_gridRow/2)
         {
             Debug.Log("Game Over");
-            ResetGame();
+            ClearGrid();
+            _gameWindow.SetActive(false);
+            _nextButton.SetActive(true);
+           // ResetGame();
         }
     }
     private void SetScore()
     {
         _moveText.text = _totalMove+"";
         _matchText.text = _matchCounter+"";
+        _livesRemainingText.text = _livesRemaining+"";
+        _scoreText.text = _score+"";
     }
     private void SaveData()
     {
-   //     _gameData.SaveData(new int[]{_totalMove,_matchCounter,_currentRevealedCardId,_currentRevealedCardIndex,revealedCardCounter,_gridColumn,_gridRow},_revealedCardArray,_imageIndexList);
+        _gameData.SaveData(new int[]{_totalMove,_matchCounter,_currentRevealedCardId,_currentRevealedCardIndex,revealedCardCounter,_gridColumn,_gridRow,_score},_revealedCardArray,_imageIndexList);
     }
 
     void Update()
@@ -240,12 +332,13 @@ public class CardMatcher : MonoBehaviour
         for (int i = 0; i < list.Count; i++)
         {
             T temp = list[i];
-            int randomIndex = Random.Range(i, list.Count);
+            int randomIndex = UnityEngine.Random.Range(i, list.Count);
             list[i] = list[randomIndex];
             list[randomIndex] = temp;
         }
         return list;
     }
+    
     private void ResetGame()
     {
         _totalMove = 0;
@@ -256,23 +349,40 @@ public class CardMatcher : MonoBehaviour
         _revealedCardArray = new List<int>();
         _imageIndexList = new List<int>();
         SaveData();
-        ClearGrid();
+      //  ClearGrid();
         InitializeGame();
     }
-    public void ClearGrid()
-{
-    foreach (GameObject child in _cards)
+    public void OnCardReveal( int cardId)
     {
-        Destroy(child);
+      
+        Debug.Log(cardId+"Card Id: " );
+        _clickCardList.Add(cardId);
+        if(_clickCardList.Count == 2)
+        {
+            CheckCards(_clickCardList[0],_clickCardList[1]);
+            _clickCardList.Clear();
+        }
+
+       
     }
-    _cards.Clear();
-}
-    void OnApplicationQuit()
+    public void OnNextClick()
+    {
+        ResetGame();;
+    }
+    public void ClearGrid()
+    {
+        foreach (GameObject child in _cards)
+        {
+            Destroy(child);
+        }
+        _cards.Clear();
+    }
+    public void OnApplicationQuit()
     {
           SaveData();
     }
 
-    void OnDestroy()
+    public void OnDestroy()
     {
          SaveData();
     }

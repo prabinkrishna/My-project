@@ -5,7 +5,8 @@ public class Card : MonoBehaviour
 {
     [SerializeField] private Button _revealButton;
     [SerializeField] private Image _resultImage;
-    [SerializeField]   private int _imageId;
+    [SerializeField] private int _imageId;
+    [SerializeField] private AudioSource _audio;
     private CardMatcher _game;
     private int _cardId;
     public int Id => _imageId;
@@ -25,15 +26,16 @@ public class Card : MonoBehaviour
     {
         Debug.Log("Revealed"+_game.revealedCardCounter);
         _game.revealedCardCounter++;
-        if(_game.revealedCardCounter >2)
-        {
-            return;
-        }
+        // if(_game.revealedCardCounter >2)
+        // {
+        //     return;
+        // }
         Debug.Log("Revealed after "+_game.revealedCardCounter);
         
-
+      
+        _audio.Play();
         _revealButton.gameObject.SetActive(false);
-        _game.OnCardReveal(_imageId,_cardId);
+        _game.OnCardReveal(_cardId);
     }
     public void ToggleInteraction(bool status )
     {
@@ -44,9 +46,9 @@ public class Card : MonoBehaviour
         _revealButton.interactable = false;
     }
 
-    public void HideCard()
+    public void ToggleHideCard(bool status)
     {
-        _revealButton.gameObject.SetActive(true);
+        _revealButton.gameObject.SetActive(status);
     }
     public void SetResultImage(Sprite sprite)
     {
