@@ -191,6 +191,7 @@ public class CardMatcher : MonoBehaviour
         {
             _cards[i].GetComponent<Card>().ToggleHideCard(true);
         }
+         InitiliazeCards();
     }
 
     private void InitializeData()
@@ -337,7 +338,7 @@ public class CardMatcher : MonoBehaviour
     }
     private void SaveData()
     {
-        // _gameData.SaveData(new int[]{_totalMove,_matchCounter,_currentRevealedCardId,_currentRevealedCardIndex,revealedCardCounter,_gridColumn,_gridRow,_score,_livesRemaining},_revealedCardArray,_imageIndexList);
+         _gameData.SaveData(new int[]{_totalMove,_matchCounter,_currentRevealedCardId,_currentRevealedCardIndex,revealedCardCounter,_gridColumn,_gridRow,_score,_livesRemaining},_revealedCardArray,_imageIndexList);
     }
 
     void Update()
